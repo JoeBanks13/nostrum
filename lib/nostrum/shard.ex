@@ -3,7 +3,7 @@ defmodule Nostrum.Shard do
 
   use Supervisor
 
-  alias Nostrum.Shard.Session
+  alias Nostrum.Shard.{Session, ProgressingGuilds}
 
   def start_link([_, shard_num] = opts) do
     Supervisor.start_link(__MODULE__, opts, name: :"Shard-#{shard_num}")
@@ -11,6 +11,7 @@ defmodule Nostrum.Shard do
 
   def init(opts) do
     children = [
+      {ProgressingGuilds, []},
       {Session, opts}
       # TODO: Add per shard ratelimiter
       # TODO: Add per shard cache
