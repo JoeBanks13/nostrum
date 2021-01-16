@@ -160,7 +160,7 @@ defmodule Nostrum.Shard.Dispatch do
     shard_progressing_guilds =
       ProgressingGuilds.get_progressing_agent(:guild, p.guild_id)
 
-    if p.chunk_index != p.chunk_count do
+    if p.chunk_index + 1 != p.chunk_count do
       ProgressingGuilds.add_guild(shard_progressing_guilds, p.guild_id)
     else
       ProgressingGuilds.remove_guild(shard_progressing_guilds, p.guild_id)
