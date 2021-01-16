@@ -160,6 +160,8 @@ defmodule Nostrum.Shard.Dispatch do
     shard_progressing_guilds =
       ProgressingGuilds.get_progressing_agent(:guild, p.guild_id)
 
+    IO.inspect {p.guild_id, p.chunk_index + 1, p.chunk_count}
+
     if p.chunk_index + 1 == p.chunk_count do
       Logger.debug "received all members from #{p.guild_id}"
       ProgressingGuilds.remove_guild(shard_progressing_guilds, p.guild_id)
