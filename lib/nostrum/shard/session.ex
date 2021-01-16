@@ -2,7 +2,7 @@ defmodule Nostrum.Shard.Session do
   @moduledoc false
 
   alias Nostrum.{Constants, Util}
-  alias Nostrum.Shard.{Connector, Event, Payload}
+  alias Nostrum.Shard.{Connector, Event, Payload, ProgressingGuilds}
   alias Nostrum.Struct.WSState
 
   require Logger
@@ -161,10 +161,17 @@ defmodule Nostrum.Shard.Session do
     {:noreply, state}
   end
 
-  def handle_cast(:heartbeat, %{heartbeat_ack: false, heartbeat_ref: timer_ref} = state) do
-    Logger.warn("heartbeat_ack not received in time, disconnecting")
-    {:ok, :cancel} = :timer.cancel(timer_ref)
-    :gun.ws_send(state.conn, :close)
+  def handle_cast(:heartbeat, %{heartbeat_ack: false, heartbeat_ref: timer_ref, shard_num: shard_num} = state) do
+    shard_progressing = ProgressingGuilds.get_progressing_agent(:shard, shard_num)
+
+    if not ProgressingGuilds.has_guilds(shard_progressing) do
+      Logger.warn("heartbeat_ack not received in time, disconnecting")
+      {:ok, :cancel} = :timer.cancel(timer_ref)
+      :gun.ws_send(state.conn, :close)
+    else
+      Logger.info("heartbeat ack was not received in time, but we are still receiving guild members")
+    end
+
     {:noreply, state}
   end
 
