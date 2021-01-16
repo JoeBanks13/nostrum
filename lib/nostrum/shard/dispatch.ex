@@ -4,7 +4,7 @@ defmodule Nostrum.Shard.Dispatch do
   alias Nostrum.Cache.{ChannelCache, PresenceCache, UserCache}
   alias Nostrum.Cache.Guild.GuildServer
   alias Nostrum.Cache.Me
-  alias Nostrum.Shard.{Intents, Session}
+  alias Nostrum.Shard.{Intents, Session, ProgressingGuilds}
 
   alias Nostrum.Struct.Event.{
     InviteCreate,
@@ -156,6 +156,15 @@ defmodule Nostrum.Shard.Dispatch do
   end
 
   def handle_event(:GUILD_MEMBERS_CHUNK = event, p, state) do
+    shard_progressing_guilds =
+      ProgressingGuilds.get_progressing_agent(:guild, p.guild_id)
+
+    if p.chunk_index != p.chunk_count do
+      ProgressingGuilds.add_guild(shard_progressing_guilds, p.guild_id)
+    else
+      ProgressingGuilds.remove_guild(shard_progressing_guilds, p.guild_id)
+    end
+
     UserCache.bulk_create(p.members)
     GuildServer.member_chunk(p.guild_id, p.members)
 
