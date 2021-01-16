@@ -160,10 +160,11 @@ defmodule Nostrum.Shard.Dispatch do
     shard_progressing_guilds =
       ProgressingGuilds.get_progressing_agent(:guild, p.guild_id)
 
-    if p.chunk_index + 1 != p.chunk_count do
-      ProgressingGuilds.add_guild(shard_progressing_guilds, p.guild_id)
-    else
+    if p.chunk_index + 1 == p.chunk_count do
+      Logger.debug "received all members from #{p.guild_id}"
       ProgressingGuilds.remove_guild(shard_progressing_guilds, p.guild_id)
+    else
+      ProgressingGuilds.add_guild(shard_progressing_guilds, p.guild_id)
     end
 
     UserCache.bulk_create(p.members)
